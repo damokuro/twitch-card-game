@@ -5,10 +5,11 @@ import csv
 # vollständiger Pfad zum Script. card-database.csv muss im selben Verzeichnis liegen.
 real_path = os.path.dirname(os.path.realpath(__file__))
 
+mode = "attack" # gibt an, welcher Wert zurückgeliefert werden soll (1. Kommandoparameter)
 argument = ""   # soll den Parameterteil nach dem Kommando enthalten
 
 # unify_name
-# wandelt mit Leerzeichen getrennten Text in Kurznamen ohne Leer-, Sonderzeichen und Zahlen um
+# Funktion wandelt mit Leerzeichen getrennten Text in Kurznamen ohne Leer-, Sonderzeichen und Zahlen um
 def unify_name(cardname):
     # in Kleinbuchstaben umwandeln:
     unified = str(cardname).lower()
@@ -16,14 +17,20 @@ def unify_name(cardname):
     unified = re.sub(r'[^a-zß]', '', unified)
     return unified
 
-# Kommandozeilenparameter verarbeiten. Der 1. ist der Name des Scripts und wird entfernt.
+# Kommandozeilenparameter verarbeiten. Der an Position 0 (der erste) ist der Name des Scripts und wird entfernt.
+# An Position 1 (zweite Stelle) befindet sich der Modus, der z.B. "attack" (Angriffswert) oder
+# "name" (Kartenname) sein kann. 
 # Alle folgenden werden in shortcut-Format ohne Leer-,Sonderzeichen und Zahlen
 # umgewandelt
-if (len(sys.argv) > 1):
+if (len(sys.argv) > 2):
+    # Modus für Rückgabewert:
+    mode = sys.argv[1].strip()
     # alle Befehlsargumente aneinanderreihen und in Kleinbuchstaben umwandeln:
-    argument = ''.join(sys.argv[1:])
+    argument = ''.join(sys.argv[2:])
     # alle Zeichen entfernen, die nicht "a" bis "z", oder "ß" sind:
     argument = unify_name(argument)
+else:
+    print("Error: arguments missing")
 
 # Datenbank laden
 cards = {}
@@ -49,6 +56,13 @@ if (argument in names):
     argument = names[argument]  # in wirklichen Shortcut umwandeln
 
 if (argument in cards):
-    result = "{name} - {attack}".format(**cards[argument])
+    formatstr = "{attack}"  # Angriffswert
+    if (mode == "name"):    # Kartenname
+        formatstr = "{name}"
+    if (mode == "attack_name"): # Angriffswert und Kartenname, durch Komma getrennt
+        formatstr = "{attack},{name}"
+    # weitere Modi können hier ergänzt werden.
+    
+    result = formatstr.format(**cards[argument])
     
 print(result)
